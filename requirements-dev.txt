@@ -1,0 +1,7 @@
+-r requirements.txt
+pyinstaller==6.22.3
+
+# Only for the legacy OCR tools (ocr_engine.py, smoke_test.py, scripts/build_glyph_pack.py)
+pytesseract>=0.3.10
+Pillow>=10.0.0
+pygetwindow>=0.0.9

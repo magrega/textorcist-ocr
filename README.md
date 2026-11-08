@@ -55,6 +55,8 @@ python -m pip install -r requirements.txt
 python helper.py
 ```
 
+`requirements.txt` holds only what the app needs at runtime. `requirements-dev.txt` adds PyInstaller and the Tesseract/Pillow tooling used by the legacy OCR scripts (`ocr_engine.py`, `smoke_test.py`, `scripts/build_glyph_pack.py`).
+
 The packaged executable uses `%LOCALAPPDATA%\TextorcistOCRHelper` for writable settings and debug images. When run from Python, settings and debug images stay in the project directory. Do not edit files inside PyInstaller's temporary `_MEI...` directory; those files are removed after exit.
 
 ### Run the command-line bot
@@ -81,12 +83,12 @@ With Python 3.10 installed, run the build script from any directory:
 & "D:\react-projects\textorcist-ocr\rebuild.ps1"
 ```
 
-The script installs dependencies and PyInstaller, runs the automatic-capture and save-import tests, and builds the executable. It uses `.venv` when present, otherwise `py -3.10`. Optional flags: `-SkipDependencies` to retain installed packages and `-SkipTests` to omit tests.
+The script creates `.venv` with `py -3.10` if it is missing, installs the runtime dependencies and PyInstaller, runs the automatic-capture and save-import tests, and builds the executable. Building from this clean environment keeps unrelated packages out of the EXE. Optional flags: `-SkipDependencies` to retain installed packages and `-SkipTests` to omit tests.
 
-To perform the same build manually with a virtual environment activated:
+To perform the same build manually with the virtual environment activated:
 
 ```powershell
-python -m pip install pyinstaller
+python -m pip install -r requirements.txt pyinstaller==6.22.3
 pyinstaller --noconfirm --clean "Textorcist OCR helper.spec"
 ```
 

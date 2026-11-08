@@ -10,25 +10,26 @@ $Spec = Join-Path $Project "Textorcist OCR helper.spec"
 
 Set-Location -LiteralPath $Project
 
-# Prefer the project's virtual environment; otherwise use Python 3.10.
+# Build from the project's virtual environment so only runtime dependencies get bundled.
 $VenvPython = Join-Path $Project ".venv\Scripts\python.exe"
-$PythonCommand = $null
-$PythonArgs = @()
 
-if (Test-Path -LiteralPath $VenvPython -PathType Leaf) {
-    $PythonCommand = $VenvPython
-}
-elseif (Get-Command py -ErrorAction SilentlyContinue) {
+if (-not (Test-Path -LiteralPath $VenvPython -PathType Leaf)) {
+    if (-not (Get-Command py -ErrorAction SilentlyContinue)) {
+        throw "Python 3.10 was not found. Install it, then run this script again."
+    }
     & py -3.10 -c "import sys" 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        $PythonCommand = "py"
-        $PythonArgs = @("-3.10")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Python 3.10 was not found. Install it, then run this script again."
+    }
+    Write-Host "Creating .venv with Python 3.10..." -ForegroundColor Cyan
+    & py -3.10 -m venv (Join-Path $Project ".venv")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not create .venv."
     }
 }
 
-if (-not $PythonCommand) {
-    throw "Python 3.10 was not found. Install it or create .venv, then run this script again."
-}
+$PythonCommand = $VenvPython
+$PythonArgs = @()
 
 function Invoke-Python {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
@@ -59,7 +60,7 @@ Write-Host "Project: $Project"
 if (-not $SkipDependencies) {
     Write-Host "Installing application and build dependencies..." -ForegroundColor Cyan
     Invoke-Python -m pip install -r (Join-Path $Project "requirements.txt")
-    Invoke-Python -m pip install pyinstaller
+    Invoke-Python -m pip install pyinstaller==6.22.3
 }
 
 if (-not $SkipTests) {
