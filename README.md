@@ -14,7 +14,7 @@ A local Windows desktop assistant for The Textorcist. It reads the battle parchm
 - **PyInstaller** — standalone Windows executable.
 - **Standard-library JSON and Base64 tools** — settings and save conversion.
 
-The bot's main recognition path uses the game's sprite font, not Tesseract. Tesseract is needed only for the separate legacy OCR scripts. The app is Windows-specific and does not use React, a web server, a database, or a cloud service.
+Recognition matches the game's own sprite font pixel by pixel; no Tesseract or other OCR engine is involved. The app is Windows-specific and does not use React, a web server, a database, or a cloud service.
 
 ## Run the executable
 
@@ -24,7 +24,7 @@ Run:
 .\dist\"Textorcist OCR helper.exe"
 ```
 
-It includes the Python runtime, Qt, the OCR engine, and font assets. A separate Python or Tesseract installation is not needed. The parchment-and-cross icon is used for the application and taskbar.
+It includes the Python runtime, Qt, the OCR engine, and font assets. A separate Python installation is not needed. The parchment-and-cross icon is used for the application and taskbar.
 
 ### Bot
 
@@ -55,7 +55,7 @@ python -m pip install -r requirements.txt
 python helper.py
 ```
 
-`requirements.txt` holds only what the app needs at runtime. `requirements-dev.txt` adds PyInstaller and the Tesseract/Pillow tooling used by the legacy OCR scripts (`ocr_engine.py`, `smoke_test.py`, `scripts/build_glyph_pack.py`).
+`requirements.txt` holds only what the app needs at runtime. `requirements-dev.txt` adds PyInstaller and Pillow for `scripts/build_glyph_pack.py`.
 
 The packaged executable uses `%LOCALAPPDATA%\TextorcistOCRHelper` for writable settings and debug images. When run from Python, settings and debug images stay in the project directory. Do not edit files inside PyInstaller's temporary `_MEI...` directory; those files are removed after exit.
 

@@ -1,9 +1,4 @@
-"""Extract typeable combat phrases from Textorcist lang.json.
-
-Writes:
-  phrases.json  — contiguous word chunks (parchment portions)
-  lines.json    — full combat lines (for span alignment / trailing I recovery)
-"""
+"""Extract typeable combat lines from Textorcist lang.json into lines.json."""
 from __future__ import annotations
 
 import json
@@ -70,20 +65,11 @@ def extract(lang: dict) -> tuple[list[str], list[str]]:
 
 def main() -> None:
     lang_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_LANG
-    phrases, lines = extract(load_lang(lang_path))
-    (ROOT / "phrases.json").write_text(
-        json.dumps(phrases, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    _, lines = extract(load_lang(lang_path))
     (ROOT / "lines.json").write_text(
         json.dumps(lines, indent=2, ensure_ascii=False), encoding="utf-8"
     )
-    print(f"Wrote {len(phrases)} phrases, {len(lines)} full lines")
-    for s in (
-        "For The Powers Granted To Me I",
-        "Vessel Amen",
-        "I",
-    ):
-        print(f"  contains {s!r}: phrase={s in phrases}")
+    print(f"Wrote {len(lines)} full lines")
 
 
 if __name__ == "__main__":
