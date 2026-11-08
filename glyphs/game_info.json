@@ -1,0 +1,34 @@
+{
+  "game": "The Textorcist: The Story of Ray Bibbia",
+  "data_win": "D:\\SteamLibrary\\steamapps\\common\\Textorcist\\data.win",
+  "bytecode": 17,
+  "counts": {
+    "sprites": 1616,
+    "fonts_chunk": 9,
+    "sprite_fonts": 26,
+    "texture_pages": 88,
+    "strings": 17231,
+    "sounds": 434
+  },
+  "typing_pipeline": {
+    "load_fonts": "scr_loadSpriteFonts → font_add_sprite_ext",
+    "process_input": ["scr_processTypedNormal", "scr_processTypedDemon"],
+    "draw_phrase": ["scr_drawPhraseNormal", "scr_drawPhraseDemon"],
+    "draw_spelled": ["scr_drawSpelledPhraseNormal", "scr_drawSpelledPhraseDemon"],
+    "draw_head_word": ["scr_drawRayHeadWordNormal", "scr_drawRayHeadWordDemon"],
+    "phrase_state": ["scr_heroGetPhrase", "scr_heroUpdatePhrase", "scr_heroSetPhraseState"],
+    "state_vars": ["currentWord", "spelledword", "spelledlen", "spelledhidden", "CurrentLetter"]
+  },
+  "font_variables": {
+    "combat_normal": ["fontCeltic", "fontCeltic2x", "fontCelticOutline", "fontCelticOutline2x"],
+    "combat_demon": ["fontCelticDemon", "fontCelticDemonOutline", "fontCelticDemonOutline2x"],
+    "ui": ["fontAlagard", "fontGibberesque", "fontRomulus", "fontEasy", "fontHeinz", "fontMap"]
+  },
+  "ink_note": "Glyph textures are white masks. Remaining vs typed ink is a runtime draw tint (draw_set_colour / draw_text_*_colour), not baked into sprites. Screen OCR should binarize parchment ink then match templates.",
+  "corpus_files": {
+    "phrases": "phrases.json",
+    "lines": "lines.json",
+    "words": "words.json",
+    "hop_phrases": "hop_phrases.json"
+  }
+}

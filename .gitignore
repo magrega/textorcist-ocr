@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# PyInstaller output
+build/
+dist/
+
+# Debug snapshots written by the bot and probes
+debug_*.png
+!debug_capture.png
+*.tmp
+
+# Extracted game data and external tools (large, regenerable)
+extracted/
+rea/
+
+# Editor / OS
+.cursor/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

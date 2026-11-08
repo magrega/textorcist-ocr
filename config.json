@@ -1,0 +1,19 @@
+{
+  "process_name": "Textorcist.exe",
+  "window_title_substr": "Textorcist",
+  "roi": {
+    "rel_left": 0.149,
+    "rel_top": 0.9065,
+    "rel_right": 0.8505,
+    "rel_bottom": 1.0
+  },
+  "poll_ms": 50,
+  "key_delay_ms": 12,
+  "stall_ms": 300,
+  "stable_frames": 2,
+  "ocr_min_confidence": 40,
+  "fuzzy_min_score": 66,
+  "glyph_pack": "fontAlagard",
+  "battle_parchment_only": true,
+  "tesseract_cmd": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+}
