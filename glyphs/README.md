@@ -5,23 +5,13 @@ character maps recovered from `scr_loadSpriteFonts` / `font_add_sprite_ext` stri
 
 ## Layout
 
-- `fonts/` — FONT-chunk bitmaps (`fnt_*`, `font5`) with `U+XXXX.png` + `metrics.json`
-- `sprite_fonts/` — gameplay sprite fonts remapped to characters (`000_U+0061_a.png`, …)
-- `registry.json` — catalog, combat charset, scripts/objects of interest
+- `sprite_fonts/fontAlagard` — the sprite font drawn on the battle parchment,
+  remapped to characters (`000_U+0061_a.png`, …) with `metrics.json`
+- `game_info.json` — notes on the game's typing scripts and font variables
 
-## Recommended OCR templates
+`scripts/build_glyph_pack.py` regenerates this folder from `extracted/`, including
+the other sprite fonts and FONT-chunk bitmaps that the helper does not use.
 
-| Role | Pack |
-|------|------|
-| Combat (normal) | `sprite_fonts/fontCeltic2x` (fallback `fontCeltic`) |
-| Combat (demon) | `sprite_fonts/fontCelticDemon` |
-| Gothic UI | `sprite_fonts/fontAlagard` |
-
-Glyph sprites are white-on-transparent/black masks. In-game ink (brown remaining,
-black/blue typed) is a **draw tint**, so template match on a binary/ink mask of the
-parchment ROI, not raw RGB.
-
-## Related project data
-
-- `phrases.json` / `lines.json` / `words.json` — dialogue & combat phrase corpus
-- `hop_phrases.json` — multi-word hop targets (Flee / Away Ye Hostiles, …)
+Glyph sprites are white-on-transparent masks. In-game ink (brown remaining,
+navy typed) is a draw tint, so match against a binary ink mask of the parchment,
+not raw RGB.

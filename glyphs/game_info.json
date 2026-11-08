@@ -26,7 +26,6 @@
   },
   "ink_note": "Glyph textures are white masks. Remaining vs typed ink is a runtime draw tint (draw_set_colour / draw_text_*_colour), not baked into sprites. Screen OCR should binarize parchment ink then match templates.",
   "corpus_files": {
-    "phrases": "phrases.json",
     "lines": "lines.json",
     "words": "words.json",
     "hop_phrases": "hop_phrases.json"

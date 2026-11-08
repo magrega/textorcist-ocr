@@ -6,7 +6,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('glyphs', 'glyphs'),
+        ('glyphs/sprite_fonts/fontAlagard', 'glyphs/sprite_fonts/fontAlagard'),
         ('words.json', '.'),
         ('hop_phrases.json', '.'),
         ('lines.json', '.'),

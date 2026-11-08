@@ -12,8 +12,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent
 GLYPHS_ROOT = ROOT / "glyphs" / "sprite_fonts"
 
-# Combat parchment uses gothic Alagard-style glyphs most strongly in probes.
-DEFAULT_PACKS = ("fontAlagard", "fontCeltic2x", "fontAlagardOutline", "fontCeltic")
+# The battle parchment is drawn with the gothic Alagard sprite font.
+DEFAULT_PACKS = ("fontAlagard",)
 
 
 @dataclass
