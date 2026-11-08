@@ -188,12 +188,13 @@ class Helper(QMainWindow):
             QTabBar::tab { padding: 14px 22px; color: #e4c69c; background: #22242b; }
             QTabBar::tab:hover { color: #ffe0af; background: #2b2d35; }
             QTabBar::tab:selected { color: #ffc978; background: #2b2925; border-bottom: 2px solid #e8a64b; }
-            QPushButton { background: #e5a94f; color: #1d1810; padding: 12px 18px; border: none; border-radius: 4px; font-weight: 600; }
-            QPushButton:hover { background: #ffc978; }
-            QPushButton[secondary="true"] { background: #51422f; color: #ffe0af; border: 1px solid #927246; }
-            QPushButton[secondary="true"]:hover { background: #675238; }
-            QPushButton#toggleButton { font-size: 16px; padding: 16px 18px; }
-            QPushButton:disabled { background: #49433a; color: #a9a29a; }
+            QPushButton { background: #0d0d0f; color: #e5a94f; padding: 11px 17px; border: 1px solid #e5a94f; border-radius: 4px; font-weight: 600; }
+            QPushButton:hover { background: #1f1a12; color: #ffc978; border-color: #ffc978; }
+            QPushButton:pressed { background: #2b2316; }
+            QPushButton[on="true"] { background: #e5a94f; color: #0d0d0f; }
+            QPushButton[on="true"]:hover { background: #ffc978; color: #0d0d0f; }
+            QPushButton#toggleButton { font-size: 16px; padding: 15px 17px; }
+            QPushButton:disabled { background: #2a2a2d; color: #77736d; border-color: #4a4a4f; }
             QLineEdit { padding: 10px; background: #242831; border: 1px solid #3b414d; }
             QLineEdit:focus { border-color: #e5a94f; }
         """)
@@ -212,9 +213,15 @@ class Helper(QMainWindow):
             label.setStyleSheet("font-size: 22px; font-weight: 600; color: #ffc978;")
         return label
 
-    def button(self, text, command, secondary=False):
+    def set_on(self, button, on):
+        if button.property("on") != on:
+            button.setProperty("on", on)
+            button.style().unpolish(button)
+            button.style().polish(button)
+
+    def button(self, text, command):
         button = QPushButton(text)
-        button.setProperty("secondary", secondary)
+        button.setProperty("on", False)
         button.setCursor(Qt.PointingHandCursor)
         button.clicked.connect(command)
         return button
@@ -260,7 +267,7 @@ class Helper(QMainWindow):
             path, _ = QFileDialog.getOpenFileName(self, title, field.text() or str(default_save_directory()), "Game save (*.dat)")
             if path:
                 field.setText(path)
-        row.addWidget(self.button("Browse…", browse, True))
+        row.addWidget(self.button("Browse…", browse))
         layout.addLayout(row)
         return field, layout
 
@@ -281,7 +288,7 @@ class Helper(QMainWindow):
         layout.addWidget(self.import_button)
         self.save_status = self.label("No files changed.", tab)
         layout.addWidget(self.save_status)
-        layout.addWidget(self.button("Open save folder / backups", self.open_save_folder, True))
+        layout.addWidget(self.button("Open save folder / backups", self.open_save_folder))
         layout.addStretch()
         return tab
 
@@ -305,7 +312,15 @@ class Helper(QMainWindow):
 
     def sync_toggle(self):
         self.toggle_button.setText("Stop typing  ·  F8" if self.bot.enabled else "Start typing  ·  F8")
+        self.set_on(self.toggle_button, self.bot.enabled)
         self.status.setText("Typing ON — switch to the game." if self.bot.enabled else "Typing OFF")
+        self.refresh_buttons()
+
+    def refresh_buttons(self):
+        self.capture_button.setText("Cancel capture" if self.capture_requested else "Manual capture instead…")
+        self.set_on(self.capture_button, self.capture_requested)
+        self.toggle_button.setEnabled(self.bot.enabled or not self.capture_requested)
+        self.import_button.setEnabled(not self.capture_requested)
 
     def stop_typing(self):
         self.bot.enabled = False
@@ -316,7 +331,7 @@ class Helper(QMainWindow):
             return
         self.stop_typing()
         self.capture_requested = not self.capture_requested
-        self.capture_button.setText("Cancel capture" if self.capture_requested else "Manual capture instead…")
+        self.refresh_buttons()
         self.capture_status.setText("Switch to the game, then press F6 to freeze a screenshot." if self.capture_requested else "Capture cancelled. Previous area kept.")
 
     def capture(self):
@@ -330,7 +345,7 @@ class Helper(QMainWindow):
             if float(np.mean(frame)) < 5:
                 raise ValueError("Capture is nearly black. Focus the visible game and retry F6.")
             self.capture_requested = False
-            self.capture_button.setText("Manual capture instead…")
+            self.refresh_buttons()
             self.select_area(frame)
         except Exception as exc:
             self.capture_status.setText(str(exc))
