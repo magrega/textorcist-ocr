@@ -20,6 +20,10 @@ a = Analysis(
         'PySide6.QtWebEngine', 'PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets',
         'PySide6.QtPdf', 'PySide6.QtPdfWidgets', 'PySide6.QtNetwork', 'PySide6.QtOpenGL',
         'PySide6.QtSvg', 'PySide6.QtQml', 'PySide6.QtQuick',
+        # Legacy OCR tooling and GUI toolkits the helper never imports.
+        'PIL', 'pytesseract', 'pygetwindow', 'tkinter', '_tkinter',
+        # No network access: skip OpenSSL (hashlib falls back to built-in hashes).
+        'ssl', '_ssl', '_hashlib',
     ],
     noarchive=False,
     optimize=0,
