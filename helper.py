@@ -11,6 +11,7 @@ import queue
 import subprocess
 import sys
 import threading
+import time
 
 import cv2
 import mss
@@ -106,11 +107,31 @@ class CaptureDialog(QDialog):
 
 class BotWorker(QThread):
     status = Signal(str)
+    roi_status = Signal(str)
     failed = Signal(str)
 
     def __init__(self, bot, stop_event):
         super().__init__()
         self.bot, self.stop_event = bot, stop_event
+        self.auto_roi = None
+        self.auto_roi_size = None
+        self.last_detect = 0.0
+
+    def detect_parchment(self, frame, win):
+        size = (win.width, win.height)
+        if self.auto_roi is not None and size == self.auto_roi_size:
+            return
+        if self.auto_roi is None and size == self.auto_roi_size and time.monotonic() - self.last_detect < 0.5:
+            return
+        self.last_detect = time.monotonic()
+        found = find_parchment(frame)
+        if found != self.auto_roi or size != self.auto_roi_size:
+            if found is None:
+                self.roi_status.emit(f"Automatic capture: searching for the parchment in the {win.width}×{win.height} game window…")
+            else:
+                x, y, width, height = found
+                self.roi_status.emit(f"Automatic capture: parchment found at x={x}, y={y}, {width}×{height} px (game window {win.width}×{win.height}).")
+        self.auto_roi, self.auto_roi_size = found, size
 
     def run(self):
         try:
@@ -126,9 +147,7 @@ class BotWorker(QThread):
                             continue
                         if self.bot.cfg.get("auto_roi", True):
                             frame = grab_window_bgr(win, capture)
-                            if (win.width, win.height) != self.auto_roi_size:
-                                self.auto_roi = find_parchment(frame)
-                                self.auto_roi_size = (win.width, win.height)
+                            self.detect_parchment(frame, win)
                             if self.auto_roi is None:
                                 self.status.emit("Parchment not found · Open a battle or use manual capture")
                                 self.stop_event.wait(0.2)
@@ -154,8 +173,6 @@ class Helper(QMainWindow):
         self.setMinimumSize(720, 640)
         self.events = queue.Queue()
         self.stop_event = threading.Event()
-        self.auto_roi = None
-        self.auto_roi_size = None
         self.capture_requested = False
         self.selecting = False
         self.busy = False
@@ -277,6 +294,7 @@ class Helper(QMainWindow):
         if self.worker is None:
             self.worker = BotWorker(self.bot, self.stop_event)
             self.worker.status.connect(self.status.setText)
+            self.worker.roi_status.connect(self.capture_status.setText)
             self.worker.failed.connect(self.worker_failed)
             self.worker.start()
         self.sync_toggle()

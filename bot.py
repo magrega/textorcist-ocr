@@ -39,6 +39,7 @@ from parchment_reader import (
 )
 
 ROOT = Path(__file__).resolve().parent
+BUNDLE_ROOT = Path(getattr(sys, "_MEIPASS", ROOT))
 if getattr(sys, "frozen", False):
     ROOT = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "TextorcistOCRHelper"
     ROOT.mkdir(parents=True, exist_ok=True)
@@ -59,7 +60,7 @@ VOCAB_FILES = ("words.json", "hop_phrases.json", "lines.json")
 def _load_vocab() -> dict[int, dict[str, str]]:
     words: list[str] = []
     for name in VOCAB_FILES:
-        path = ROOT / name
+        path = BUNDLE_ROOT / name
         if path.exists():
             for entry in json.loads(path.read_text(encoding="utf-8")):
                 words.extend(str(entry).split())
