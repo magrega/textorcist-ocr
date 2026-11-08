@@ -16,7 +16,11 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['PySide6.QtWebEngine', 'PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets', 'PySide6.QtPdf', 'PySide6.QtPdfWidgets'],
+    excludes=[
+        'PySide6.QtWebEngine', 'PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets',
+        'PySide6.QtPdf', 'PySide6.QtPdfWidgets', 'PySide6.QtNetwork', 'PySide6.QtOpenGL',
+        'PySide6.QtSvg', 'PySide6.QtQml', 'PySide6.QtQuick',
+    ],
     noarchive=False,
     optimize=0,
 )
@@ -26,8 +30,33 @@ def _name(entry):
     return entry[0].replace('\\', '/').lower()
 
 
-# The app only reads screenshots; OpenCV's video I/O backend is never used.
-a.binaries = [b for b in a.binaries if not _name(b).startswith('cv2/opencv_videoio_ffmpeg')]
+QT_PLUGINS_KEPT = {
+    'pyside6/plugins/platforms/qwindows.dll',
+    'pyside6/plugins/styles/qmodernwindowsstyle.dll',
+    'pyside6/plugins/imageformats/qico.dll',
+}
+# Only reached through plugins removed above (QML, virtual keyboard, PDF, TLS, SVG)
+# or as a fallback renderer for machines without OpenGL drivers.
+QT_DLLS_DROPPED = {
+    'opengl32sw.dll', 'qt6pdf.dll', 'qt6quick.dll', 'qt6qml.dll', 'qt6qmlmodels.dll',
+    'qt6qmlmeta.dll', 'qt6qmlworkerscript.dll', 'qt6virtualkeyboard.dll',
+    'qt6network.dll', 'qt6svg.dll', 'qt6opengl.dll',
+}
+
+
+def _keep(entry):
+    name = _name(entry)
+    if name.startswith('cv2/opencv_videoio_ffmpeg'):
+        return False  # the app only reads screenshots, never video
+    if name.startswith('pyside6/plugins/'):
+        return name in QT_PLUGINS_KEPT
+    if name.startswith('pyside6/translations/'):
+        return False
+    return not (name.startswith('pyside6/') and name.split('/')[-1] in QT_DLLS_DROPPED)
+
+
+a.binaries = [b for b in a.binaries if _keep(b)]
+a.datas = [d for d in a.datas if _keep(d)]
 
 pyz = PYZ(a.pure)
 
