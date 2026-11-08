@@ -8,7 +8,8 @@ A local Windows desktop assistant for The Textorcist. It reads the battle parchm
 - **PySide6 / Qt 6** — desktop UI.
 - **OpenCV and NumPy** — image analysis, automatic parchment detection, and sprite matching.
 - **MSS** — screenshots of the game window.
-- **pynput** — keyboard input and global F6/F8 hotkeys.
+- **pynput** — keyboard input.
+- **Win32 RegisterHotKey** (`hotkeys.py`) — global F6/F8 hotkeys in the helper app.
 - **RapidFuzz** — limited vocabulary correction for uncertain glyphs.
 - **PyInstaller** — standalone Windows executable.
 - **Standard-library JSON and Base64 tools** — settings and save conversion.

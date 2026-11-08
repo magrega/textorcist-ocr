@@ -22,11 +22,10 @@ from PySide6.QtWidgets import (
     QApplication, QDialog, QFileDialog, QFrame, QHBoxLayout, QLabel,
     QLineEdit, QMainWindow, QMessageBox, QPushButton, QTabWidget, QVBoxLayout, QWidget,
 )
-from pynput.keyboard import GlobalHotKeys
-
 from auto_roi import find_parchment
 from bot import Bot, CONFIG_PATH
 from glyph_matcher import load_primary_pack
+from hotkeys import HotKeys
 from save_import import default_save_directory, import_save, prepare_import
 
 
@@ -198,8 +197,10 @@ class Helper(QMainWindow):
             QLineEdit { padding: 10px; background: #242831; border: 1px solid #3b414d; }
             QLineEdit:focus { border-color: #e5a94f; }
         """)
-        self.hotkeys = GlobalHotKeys({"<f8>": lambda: self.events.put(("toggle", None)), "<f6>": lambda: self.events.put(("capture", None))})
+        self.hotkeys = HotKeys({"f8": lambda: self.events.put(("toggle", None)), "f6": lambda: self.events.put(("capture", None))})
         self.hotkeys.start()
+        if self.hotkeys.failed:
+            self.status.setText(f"{' and '.join(self.hotkeys.failed)} is used by another program. Use the buttons instead.")
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll)
         self.timer.start(80)
@@ -285,6 +286,9 @@ class Helper(QMainWindow):
         return tab
 
     def toggle(self):
+        if self.bot.enabled:
+            self.stop_typing()
+            return
         if self.capture_requested or self.selecting or self.busy:
             return
         if load_primary_pack() is None:
