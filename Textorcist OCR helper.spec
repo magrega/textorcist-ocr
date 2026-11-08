@@ -20,6 +20,15 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+
+def _name(entry):
+    return entry[0].replace('\\', '/').lower()
+
+
+# The app only reads screenshots; OpenCV's video I/O backend is never used.
+a.binaries = [b for b in a.binaries if not _name(b).startswith('cv2/opencv_videoio_ffmpeg')]
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
