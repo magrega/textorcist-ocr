@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from save_import import import_save, prepare_import, split_save
+from save_import import import_folder, import_save, prepare_folder_import, prepare_import, split_save
 
 
 def save(prefix: bytes, progress: str, suffix: bytes = b"\0") -> bytes:
@@ -14,12 +14,17 @@ class SaveImportTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
-        self.source = self.root / "incoming.dat"
-        self.target = self.root / "current.dat"
-        self.other = self.root / "other.dat"
+        self.incoming = self.root / "incoming"
+        self.current = self.root / "current"
+        self.incoming.mkdir()
+        self.current.mkdir()
+        self.source = self.incoming / "progress.dat"
+        self.target = self.current / "progress.dat"
+        self.other = self.current / "other.dat"
         self.source.write_bytes(save(b"old-prefix{not-json}", '{"story":10,"keyUp":"W"}'))
         self.target.write_bytes(save(b"new-prefix", '{"story":0,"keyUp":"A"}', b"\0\0"))
         self.other.write_bytes(save(b"p", '{"x":1}'))
+        (self.incoming / "other.dat").write_bytes(save(b"old", '{"x":99}'))
 
     def tearDown(self):
         self.temp.cleanup()
@@ -43,7 +48,7 @@ class SaveImportTests(unittest.TestCase):
 
     def test_backs_up_all_saves_before_replacing_only_target(self):
         backup = import_save(self.source, self.target)
-        self.assertEqual((backup / "current.dat").read_bytes(), save(b"new-prefix", '{"story":0,"keyUp":"A"}', b"\0\0"))
+        self.assertEqual((backup / "progress.dat").read_bytes(), save(b"new-prefix", '{"story":0,"keyUp":"A"}', b"\0\0"))
         self.assertEqual((backup / "other.dat").read_bytes(), self.other.read_bytes())
         self.assertEqual(base64.b64decode(self.target.read_bytes()), b'new-prefix{"story":10,"keyUp":"W"}\0\0')
 
@@ -52,7 +57,22 @@ class SaveImportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             import_save(self.source, self.target)
         self.assertFalse(self.target.exists())
-        self.assertFalse((self.root / "helper-backups").exists())
+        self.assertFalse((self.current / "helper-backups").exists())
+
+    def test_folder_import_replaces_every_matching_dat(self):
+        backup, written = import_folder(self.incoming, self.current)
+        self.assertCountEqual(written, ["progress.dat", "other.dat"])
+        self.assertEqual(base64.b64decode(self.target.read_bytes()), b'new-prefix{"story":10,"keyUp":"W"}\0\0')
+        self.assertEqual(base64.b64decode(self.other.read_bytes()), b'p{"x":99}\0')
+        self.assertEqual((backup / "progress.dat").read_bytes(), save(b"new-prefix", '{"story":0,"keyUp":"A"}', b"\0\0"))
+        self.assertEqual((backup / "other.dat").read_bytes(), save(b"p", '{"x":1}'))
+
+    def test_folder_import_requires_local_targets_for_every_incoming_file(self):
+        (self.incoming / "extra.dat").write_bytes(save(b"x", '{"y":1}'))
+        with self.assertRaises(ValueError) as ctx:
+            prepare_folder_import(self.incoming, self.current)
+        self.assertIn("extra.dat", str(ctx.exception))
+        self.assertEqual(self.target.read_bytes(), save(b"new-prefix", '{"story":0,"keyUp":"A"}', b"\0\0"))
 
 
 if __name__ == "__main__":

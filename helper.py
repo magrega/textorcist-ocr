@@ -26,7 +26,7 @@ from auto_roi import find_parchment
 from bot import Bot, CONFIG_PATH
 from glyph_matcher import load_primary_pack
 from hotkeys import HotKeys
-from save_import import default_save_directory, import_save, prepare_import
+from save_import import default_save_directory, import_folder, prepare_folder_import
 
 
 class CaptureDialog(QDialog):
@@ -256,7 +256,7 @@ class Helper(QMainWindow):
         layout.addStretch()
         return tab
 
-    def file_row(self, parent, title, initial):
+    def folder_row(self, parent, title, initial):
         layout = QVBoxLayout()
         layout.setSpacing(6)
         layout.addWidget(self.label(title, parent))
@@ -264,7 +264,7 @@ class Helper(QMainWindow):
         field = QLineEdit(initial)
         row.addWidget(field)
         def browse():
-            path, _ = QFileDialog.getOpenFileName(self, title, field.text() or str(default_save_directory()), "Game save (*.dat)")
+            path = QFileDialog.getExistingDirectory(self, title, field.text() or str(default_save_directory()))
             if path:
                 field.setText(path)
         row.addWidget(self.button("Browse…", browse))
@@ -277,12 +277,12 @@ class Helper(QMainWindow):
         layout.setContentsMargins(32, 28, 32, 28)
         layout.setSpacing(14)
         layout.addWidget(self.label("Bring your progress with you", tab, True))
-        layout.addWidget(self.label("Close the game completely. If Steam Cloud is enabled, pause it for this import so it does not overwrite local changes.\n\nThe current installation must already have a save. The helper keeps its binary prefix and replaces only the JSON progress. All local .dat saves are backed up before the selected file is replaced.", tab))
-        self.source, source_layout = self.file_row(tab, "Incoming .dat save", "")
-        self.target, target_layout = self.file_row(tab, "Current local save to replace", str(default_save_directory() / "progress.dat"))
+        layout.addWidget(self.label("Close the game completely. If Steam Cloud is enabled, pause it for this import so it does not overwrite local changes.\n\nLaunch Textorcist once on this PC so it creates local .dat files. Then choose the folder with your old saves. The helper keeps each local file's binary prefix and replaces only the JSON progress inside every matching .dat.", tab))
+        self.source, source_layout = self.folder_row(tab, "Incoming save folder", "")
+        self.target, target_layout = self.folder_row(tab, "Current local save folder", str(default_save_directory()))
         layout.addLayout(source_layout)
         layout.addLayout(target_layout)
-        layout.addWidget(self.label("Match save types: normally progress.dat → progress.dat. Renamed incoming files are allowed.", tab))
+        layout.addWidget(self.label("Matching is by filename: progress.dat → progress.dat, ints.dat → ints.dat, and so on. All local .dat files are backed up first.", tab))
         self.import_button = self.button("Back up and import…", self.confirm_import)
         self.import_button.setFixedWidth(260)
         layout.addWidget(self.import_button)
@@ -381,29 +381,39 @@ class Helper(QMainWindow):
         if self.busy or self.selecting or self.capture_requested:
             return
         self.stop_typing()
-        source, target = Path(self.source.text()), Path(self.target.text())
+        source, target = Path(self.source.text().strip()), Path(self.target.text().strip())
         try:
             result = subprocess.run(["tasklist", "/FI", "IMAGENAME eq Textorcist.exe", "/FO", "CSV", "/NH"], capture_output=True, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
             if "textorcist.exe" in result.stdout.lower():
-                raise ValueError("Close Textorcist completely before importing a save.")
-            prepare_import(source, target)
+                raise ValueError("Close Textorcist completely before importing saves.")
+            planned = prepare_folder_import(source, target)
         except Exception as exc:
-            QMessageBox.critical(self, "Cannot import save", str(exc))
+            QMessageBox.critical(self, "Cannot import saves", str(exc))
             return
         self.busy = True
         try:
-            answer = QMessageBox.question(self, "Back up and replace save?", f"Incoming:\n{source}\n\nReplace:\n{target}\n\nAll .dat files in the destination folder will be backed up. Only this destination file will be replaced.\n\nKeep the game closed and Steam Cloud paused. Continue?")
+            names = "\n".join(sorted(planned))
+            answer = QMessageBox.question(
+                self,
+                "Back up and import all matching saves?",
+                f"Incoming folder:\n{source}\n\nLocal folder:\n{target}\n\n"
+                f"{len(planned)} .dat file(s) will be updated:\n{names}\n\n"
+                "All local .dat files will be backed up first. Keep the game closed and Steam Cloud paused. Continue?",
+            )
             if answer != QMessageBox.Yes:
                 return
-            backup = import_save(source, target)
-            self.save_status.setText(f"Import complete.\nBackup: {backup}\n\nTo undo: close the game and copy the backed-up .dat files into the save folder.")
+            backup, written = import_folder(source, target)
+            self.save_status.setText(
+                f"Import complete: {len(written)} file(s).\nBackup: {backup}\n\n"
+                "To undo: close the game and copy the backed-up .dat files into the save folder."
+            )
         except Exception as exc:
             QMessageBox.critical(self, "Import failed", str(exc))
         finally:
             self.busy = False
 
     def open_save_folder(self):
-        folder = Path(self.target.text()).parent
+        folder = Path(self.target.text().strip() or str(default_save_directory()))
         if folder.is_dir():
             os.startfile(folder)
         else:

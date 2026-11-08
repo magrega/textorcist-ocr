@@ -36,11 +36,11 @@ If the parchment is not found, use **Manual capture instead…**: focus the game
 
 ### Save import
 
-Close the game completely. If Steam Cloud is enabled, pause it for the import so it does not overwrite local changes.
+Close the game completely. If Steam Cloud is enabled, pause it for the import so it does not overwrite local changes. Launch Textorcist once on this PC so it creates local `.dat` files under `%LOCALAPPDATA%\Textorcist`.
 
-Choose the incoming `.dat` and corresponding local save—normally `progress.dat` in `%LOCALAPPDATA%\Textorcist`. After confirmation, the app preserves the current installation's binary prefix and trailing bytes and replaces only its JSON progress.
+Choose the folder with your old saves (every `.dat` in that folder). After confirmation, the app matches files by name (`progress.dat` → `progress.dat`, and so on), keeps each local installation's binary prefix and trailing bytes, and replaces only the JSON progress inside every matching save—the same workflow described in the Steam guide for transferring saves.
 
-All `.dat` files in the destination folder are backed up to a unique subfolder of `helper-backups` before the selected save is replaced. The app refuses to import while the game is running. To undo an import, close the game and copy the backup `.dat` files back into the save folder. Save processing stays entirely local.
+All local `.dat` files are backed up to a unique subfolder of `helper-backups` before anything is replaced. The app refuses to import while the game is running. To undo an import, close the game and copy the backup `.dat` files back into the save folder. Save processing stays entirely local.
 
 ## Manual development setup
 
